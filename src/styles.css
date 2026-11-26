@@ -393,3 +393,51 @@ details > summary { cursor: pointer; color: var(--acento); font-size: 0.9rem; }
   .num { font-size: 0.98rem; }
   .duas.sempre-duas { grid-template-columns: 1fr 1fr; }
 }
+
+/* =====================================================================
+   Correções de vazamento no celular (Safari/iOS e telas estreitas)
+   ===================================================================== */
+/* Filhos de grid/flex podem encolher abaixo do conteúdo */
+label, .duas > *, .opcoes > *, .colunas > *, .detalhe-grade > *, .pilha > *, .corpo, .titulos, .grupo-campo { min-width: 0; }
+input, select, textarea { min-width: 0; max-width: 100%; }
+/* iOS: campos de data/hora têm largura própria; forçamos a seguir o layout */
+input[type='date'], input[type='time'] {
+  -webkit-appearance: none; appearance: none; display: block; min-width: 0; line-height: 1.3;
+}
+input[type='date']::-webkit-date-and-time-value, input[type='time']::-webkit-date-and-time-value { text-align: left; margin: 0; }
+input[type='date']::-webkit-calendar-picker-indicator, input[type='time']::-webkit-calendar-picker-indicator { margin: 0; }
+/* Grupos de botões quebram linha em vez de sair da caixa */
+.acoes { flex-wrap: wrap; }
+.cartao .acoes button, .cartao .acoes .botao { white-space: normal; text-align: left; }
+.chips > * { max-width: 100%; }
+.chips input.chip { flex: 1 1 120px; width: auto; }
+.horarios-edit input[type='time'] { flex: 1 1 110px; width: auto; }
+.cabecalho { flex-wrap: wrap; }
+.cabecalho .titulos { flex: 1 1 200px; }
+.titulo, .texto, .sub span { overflow-wrap: anywhere; }
+@media (max-width: 400px) {
+  .numeros { grid-template-columns: 1fr 1fr; }
+  .numeros > div:last-child { grid-column: 1 / -1; border-left: 0; padding-left: 0; border-top: 1px solid var(--borda); padding-top: 0.6rem; }
+  .num { font-size: 1.05rem; }
+  .duas.sempre-duas { grid-template-columns: 1fr; }
+  .conteudo { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .cartao { padding: 1rem 0.9rem; }
+}
+
+/* ---------- Painel geral (Início) ---------- */
+.painel-geral { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; }
+@media (max-width: 1000px) { .painel-geral { grid-template-columns: minmax(0, 1fr); } }
+.agenda .linha, .item-agenda { gap: 0.65rem; }
+.hora-agenda { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 0.9rem; min-width: 2.9rem; color: var(--texto-2); }
+.icone-agenda { color: var(--acento); display: inline-flex; flex: none; }
+label.item-agenda { cursor: pointer; font-size: 1rem; font-weight: 400; color: var(--texto); }
+label.item-agenda input { width: 26px; height: 26px; flex: none; }
+.item-feito .titulo, .item-feito .hora-agenda { color: var(--sutil); }
+.mini-numeros { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.mini-numeros > .cartao { margin-top: 0; display: grid; gap: 0.2rem; align-content: start; }
+.cab-mini { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--texto-2); }
+.cab-mini svg { color: var(--acento); }
+.mini-numeros .num { font-size: 1.25rem; }
+.separador-chips { width: 1px; align-self: stretch; background: var(--borda); margin: 0 0.15rem; }
+.destaque.cartao-link { gap: 0.6rem; }
+.texto-btn { gap: 0.3rem; }

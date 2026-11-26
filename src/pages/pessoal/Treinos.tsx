@@ -134,7 +134,7 @@ export default function Treinos() {
                 aria-label="Outra duração em minutos"
                 placeholder="Outra"
                 className="chip"
-                style={{ width: 90, minHeight: 36 }}
+                style={{ minHeight: 36 }}
                 value={DURACOES.includes(Number(duracao)) ? '' : duracao}
                 onChange={(e) => setDuracao(e.target.value.replace(/\D/g, ''))}
               />

@@ -454,7 +454,7 @@ function Remedios() {
                   </button>
                 </span>
               ))}
-              <input type="time" aria-label="Novo horário" style={{ width: 'auto', minHeight: 36 }} value={novoHorario} onChange={(e) => setNovoHorario(e.target.value)} />
+              <input type="time" aria-label="Novo horário" style={{ minHeight: 36 }} value={novoHorario} onChange={(e) => setNovoHorario(e.target.value)} />
               <button type="button" className="pequeno" disabled={!novoHorario} onClick={addHorario}>
                 <PlusIcon size={16} /> Horário
               </button>

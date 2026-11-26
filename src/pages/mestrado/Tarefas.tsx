@@ -187,7 +187,7 @@ export function ListaTarefas({ area, titulo: tituloPagina, subtitulo, categorias
                     {a.r}
                   </button>
                 ))}
-                <input type="date" aria-label="Outra data" className="chip" style={{ width: 'auto', minHeight: 36 }} value={atalhos.some((a) => a.v === prazo) ? '' : prazo} onChange={(e) => setPrazo(e.target.value)} />
+                <input type="date" aria-label="Outra data" className="chip" style={{ minHeight: 36 }} value={atalhos.some((a) => a.v === prazo) ? '' : prazo} onChange={(e) => setPrazo(e.target.value)} />
                 <button type="button" className="chip" aria-expanded={opcoes} onClick={() => setOpcoes(!opcoes)}>
                   Mais opções <CaretDownIcon size={14} style={{ rotate: opcoes ? '180deg' : '0deg' }} />
                 </button>
