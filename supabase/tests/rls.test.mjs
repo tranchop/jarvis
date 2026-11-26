@@ -18,6 +18,7 @@ await db.exec(`
 `)
 await db.exec(mig('0001_base_seguranca.sql'))
 await db.exec(mig('0002_mestrado.sql'))
+await db.exec(mig('0003_pessoal.sql'))
 
 const DONO = '11111111-1111-1111-1111-111111111111'
 const INTRUSO = '22222222-2222-2222-2222-222222222222'
@@ -93,6 +94,38 @@ check('link malicioso rejeitado', Boolean(r.e))
 // 7. Usuário autenticado não executa funções internas
 r = await como('authenticated', aal2, `select private.registrar_historico()`)
 check('função interna bloqueada', Boolean(r.e))
+
+// 8. Área Pessoal: dados sensíveis com as mesmas regras
+for (const t of ['financas', 'saude_consultas', 'saude_remedios', 'saude_tomadas', 'treinos']) {
+  r = await como('anon', {}, `select * from public.${t}`)
+  check(`anônimo sem acesso a ${t}`, Boolean(r.e))
+}
+r = await como('authenticated', aal2, `insert into public.financas (tipo, valor, categoria) values ('saida', 25.5, 'Alimentação') returning id`)
+check('dono lança gasto', !r.e)
+const finId = r.r?.rows[0].id
+r = await como('authenticated', aal1, `select count(*)::int n from public.financas`)
+check('finanças invisíveis sem 2FA', r.r?.rows[0].n === 0)
+r = await como('authenticated', outro, `select count(*)::int n from public.financas`)
+check('finanças invisíveis para outro usuário', r.r?.rows[0].n === 0)
+r = await como('authenticated', aal2, `delete from public.financas where id='${finId}'`)
+check('lançamento não é apagado (só arquivado)', Boolean(r.e))
+r = await como('authenticated', aal2, `insert into public.financas (tipo, valor, categoria) values ('saida', -5, 'x')`)
+check('valor negativo rejeitado', Boolean(r.e))
+r = await como('authenticated', aal2, `insert into public.saude_remedios (nome, horarios) values ('Vitamina D', '{08:00}') returning id`)
+check('dono cadastra remédio', !r.e)
+const remId = r.r?.rows[0].id
+r = await como('authenticated', aal2, `insert into public.saude_tomadas (remedio_id, horario) values ('${remId}', '08:00') returning id`)
+check('dono registra tomada', !r.e)
+r = await como('authenticated', aal2, `insert into public.saude_tomadas (remedio_id, horario) values ('${remId}', '08:00')`)
+check('tomada duplicada no mesmo horário rejeitada', Boolean(r.e))
+r = await como('authenticated', aal2, `insert into public.saude_tomadas (remedio_id, horario) values ('${remId}', '25:99')`)
+check('horário inválido rejeitado', Boolean(r.e))
+r = await como('authenticated', aal2, `delete from public.saude_tomadas where remedio_id='${remId}'`)
+check('dono desmarca tomada', !r.e && r.r.affectedRows === 1)
+r = await como('authenticated', aal2, `delete from public.saude_remedios where id='${remId}'`)
+check('remédio não é apagado (só arquivado)', Boolean(r.e))
+r = await como('authenticated', aal2, `insert into public.tarefas (titulo, area, recorrencia) values ('Lavar roupa', 'casa', 'semanal')`)
+check('tarefa de casa aceita', !r.e)
 
 console.log(falhas ? `\n${falhas} FALHA(S)` : '\nTodos os testes passaram')
 process.exit(falhas ? 1 : 0)
