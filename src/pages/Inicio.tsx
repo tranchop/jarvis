@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom'
 import { useAvisos } from '../components/Avisos'
 import { Esqueleto, Vazio } from '../components/Estados'
 import { supabase } from '../lib/supabase'
+import { diaDoEvento, eventosGoogle, horaDoEvento, type EventoAgenda } from '../lib/google'
 import { concluirTarefa } from '../lib/tarefas'
 import type { Consulta, Experimento, Remedio, Tarefa, Tomada } from '../lib/types'
 import {
@@ -48,6 +49,7 @@ interface ItemAgenda {
   sub?: string
   icone: ReactNode
   to?: string
+  href?: string
   dose?: { remedio: Remedio; horario: string; tomada?: Tomada }
 }
 
@@ -102,8 +104,19 @@ export default function Inicio() {
     }
   }, [hoje])
 
+  // Google Agenda carrega à parte: se falhar, o resto do painel funciona
+  const google = useCarregar(async () => {
+    try {
+      return await eventosGoogle(new Date(`${hoje}T00:00`), new Date(`${em7}T23:59:59`))
+    } catch {
+      return { conectado: true, erro: 'Agenda do Google indisponível agora.', eventos: [] as EventoAgenda[] }
+    }
+  }, [hoje, em7])
+  const eventosG = google.dados?.eventos ?? []
+
   const visao = useMemo(() => {
     if (!dados) return null
+    const linkSeguro = (e: EventoAgenda) => (e.link?.startsWith('https://www.google.com/calendar/') ? e.link : undefined)
     const agenda: ItemAgenda[] = [
       ...dados.consultas
         .filter((c) => diaLocal(c.data_hora) === hoje)
@@ -114,6 +127,16 @@ export default function Inicio() {
           sub: [c.tipo === 'exame' ? 'Exame' : 'Consulta', c.local].filter(Boolean).join(', '),
           icone: <StethoscopeIcon size={18} />,
           to: '/pessoal/saude',
+        })),
+      ...eventosG
+        .filter((e) => diaDoEvento(e) === hoje)
+        .map((e) => ({
+          chave: e.id,
+          hora: horaDoEvento(e),
+          titulo: e.titulo,
+          sub: [e.local, e.agenda].filter(Boolean).join(', '),
+          icone: <CalendarBlankIcon size={18} />,
+          href: linkSeguro(e),
         })),
       ...dados.remedios.flatMap((r) =>
         r.horarios.map((h) => ({
@@ -138,7 +161,7 @@ export default function Inicio() {
     ].sort((a, b) => (a.hora ?? '99').localeCompare(b.hora ?? '99'))
 
     const tarefasHoje = dados.tarefas.filter((t) => t.prazo && t.prazo <= hoje)
-    type Prox = { titulo: string; sub: string; icone: ReactNode; to: string }
+    type Prox = { titulo: string; sub: string; icone: ReactNode; to: string; href?: string }
     const proximos = new Map<string, Prox[]>()
     const add = (dia: string, item: Prox) => proximos.set(dia, [...(proximos.get(dia) ?? []), item])
     for (const t of dados.tarefas.filter((t) => t.prazo && t.prazo > hoje))
@@ -148,6 +171,16 @@ export default function Inicio() {
         icone: t.area === 'casa' ? <HouseLineIcon size={16} /> : <CalendarBlankIcon size={16} />,
         to: t.area === 'casa' ? '/pessoal/casa' : '/mestrado/tarefas',
       })
+    for (const e of eventosG.filter((e) => diaDoEvento(e) > hoje)) {
+      const h = horaDoEvento(e)
+      add(diaDoEvento(e), {
+        titulo: e.titulo,
+        sub: [h ? `Às ${h}` : 'Dia inteiro', e.agenda].join(', '),
+        icone: <CalendarBlankIcon size={16} />,
+        to: '',
+        href: linkSeguro(e),
+      })
+    }
     for (const c of dados.consultas.filter((c) => diaLocal(c.data_hora) > hoje))
       add(diaLocal(c.data_hora), { titulo: c.especialidade, sub: `${c.tipo === 'exame' ? 'Exame' : 'Consulta'} às ${hora(c.data_hora)}`, icone: <StethoscopeIcon size={16} />, to: '/pessoal/saude' })
     for (const e of dados.experimentos.filter((e) => e.status === 'planejado' && e.data_planejada && e.data_planejada > hoje && e.data_planejada <= em7))
@@ -160,7 +193,7 @@ export default function Inicio() {
       ativos: dados.experimentos.filter((e) => e.status === 'em_andamento'),
       proximos: [...proximos.entries()].sort((a, b) => a[0].localeCompare(b[0])),
     }
-  }, [dados, hoje, em7])
+  }, [dados, hoje, em7, eventosG])
 
   async function concluir(t: Tarefa) {
     if (!dados) return
@@ -225,7 +258,7 @@ export default function Inicio() {
                 )}
               </div>
               {visao.agenda.length === 0 ? (
-                <Vazio>Nada marcado para hoje: nenhuma consulta, dose ou experimento.</Vazio>
+                <Vazio>Nada marcado para hoje.</Vazio>
               ) : (
                 <ul className="lista agenda">
                   {visao.agenda.map((a) => {
@@ -248,9 +281,23 @@ export default function Inicio() {
                           </label>
                         </li>
                       )
+                    if (a.href)
+                      return (
+                        <li key={a.chave}>
+                          <a href={a.href} target="_blank" rel="noopener noreferrer" className="linha item-agenda">
+                            {conteudo}
+                          </a>
+                        </li>
+                      )
+                    if (!a.to)
+                      return (
+                        <li key={a.chave} className="linha item-agenda">
+                          {conteudo}
+                        </li>
+                      )
                     return (
                       <li key={a.chave}>
-                        <Link to={a.to!} className="linha item-agenda">
+                        <Link to={a.to} className="linha item-agenda">
                           {conteudo}
                         </Link>
                       </li>
@@ -258,6 +305,15 @@ export default function Inicio() {
                   })}
                 </ul>
               )}
+              {google.dados && !google.dados.conectado && (
+                <p className="sutil pequeno" style={{ marginTop: '0.75rem' }}>
+                  <Link to="/conta" className="texto-btn" style={{ padding: 0, minHeight: 0 }}>
+                    Conectar a Google Agenda
+                  </Link>{' '}
+                  para ver seus eventos aqui.
+                </p>
+              )}
+              {google.dados?.erro && <p className="sutil pequeno" style={{ marginTop: '0.75rem' }}>{google.dados.erro}</p>}
             </div>
 
             <div className="cartao">
@@ -342,13 +398,23 @@ export default function Inicio() {
                     <ul className="lista">
                       {itens.map((i, n) => (
                         <li key={n}>
-                          <Link to={i.to} className="linha">
-                            <span className="icone-agenda">{i.icone}</span>
-                            <span className="corpo">
-                              <span className="titulo">{i.titulo}</span>
-                              <span className="sub">{i.sub}</span>
-                            </span>
-                          </Link>
+                          {i.href ? (
+                            <a href={i.href} target="_blank" rel="noopener noreferrer" className="linha">
+                              <span className="icone-agenda">{i.icone}</span>
+                              <span className="corpo">
+                                <span className="titulo">{i.titulo}</span>
+                                <span className="sub">{i.sub}</span>
+                              </span>
+                            </a>
+                          ) : (
+                            <Link to={i.to || '/'} className="linha">
+                              <span className="icone-agenda">{i.icone}</span>
+                              <span className="corpo">
+                                <span className="titulo">{i.titulo}</span>
+                                <span className="sub">{i.sub}</span>
+                              </span>
+                            </Link>
+                          )}
                         </li>
                       ))}
                     </ul>
