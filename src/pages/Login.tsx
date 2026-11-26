@@ -35,7 +35,6 @@ export default function Login() {
             type="password"
             autoComplete="current-password"
             required
-            minLength={12}
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
           />

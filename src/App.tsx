@@ -2,6 +2,7 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import { AuthProvider, useAuth } from './lib/auth'
 import { configurado } from './lib/supabase'
+import Conta from './pages/Conta'
 import DoisFatores from './pages/DoisFatores'
 import Inicio from './pages/Inicio'
 import Login from './pages/Login'
@@ -28,6 +29,7 @@ function Portao() {
           <Route path="mestrado/protocolos" element={<Protocolos />} />
           <Route path="mestrado/protocolos/:id" element={<ProtocoloDetalhe />} />
           <Route path="mestrado/tarefas" element={<Tarefas />} />
+          <Route path="conta" element={<Conta />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

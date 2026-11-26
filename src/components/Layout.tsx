@@ -32,6 +32,9 @@ export default function Layout() {
         </nav>
         <div className="rodape-lateral">
           <span className="sutil pequeno">{session?.user.email}</span>
+          <NavLink to="/conta" className="link pequeno">
+            Conta e senha
+          </NavLink>
           <button className="link" onClick={() => void sair()}>
             Sair
           </button>
