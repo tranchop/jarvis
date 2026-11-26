@@ -96,6 +96,10 @@ $$;
 revoke all on function private.registrar_historico() from public, anon, authenticated;
 revoke all on function private.touch_updated_at() from public, anon, authenticated;
 
+-- Tabelas internas: RLS ligado sem políticas = nenhum acesso pela API
+alter table private.app_owner enable row level security;
+alter table private.historico enable row level security;
+
 -- Dados nunca ficam acessíveis ao papel anônimo
 alter default privileges in schema public revoke all on tables from anon;
 alter default privileges in schema public revoke all on sequences from anon;
