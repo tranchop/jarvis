@@ -1,3 +1,4 @@
+import { SignOutIcon } from '@phosphor-icons/react'
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '../lib/auth'
 import { supabase } from '../lib/supabase'
@@ -29,14 +30,17 @@ export default function Conta() {
   return (
     <section>
       <header className="cabecalho">
-        <h1>Conta</h1>
-        <button className="botao" onClick={() => void sair()}>
-          Sair
+        <div className="titulos">
+          <h1>Conta</h1>
+          <p className="sutil pequeno">{session?.user.email}</p>
+        </div>
+        <button onClick={() => void sair()}>
+          <SignOutIcon size={18} /> Sair
         </button>
       </header>
       <form className="cartao formulario" onSubmit={trocar} style={{ maxWidth: 480 }}>
         <h2>Trocar senha</h2>
-        <p className="sutil pequeno">{session?.user.email}</p>
+        <p className="sutil pequeno">Use 12 caracteres ou mais. Uma frase longa é fácil de lembrar e difícil de adivinhar.</p>
         <input type="email" autoComplete="username" value={session?.user.email ?? ''} readOnly hidden />
         <label>
           Nova senha
@@ -46,10 +50,10 @@ export default function Conta() {
           Repetir nova senha
           <input type="password" autoComplete="new-password" minLength={12} required value={repetir} onChange={(e) => setRepetir(e.target.value)} />
         </label>
-        {erro && <p className="erro">{erro}</p>}
+        {erro && <p className="erro" role="alert">{erro}</p>}
         {msg && <p className="sucesso">{msg}</p>}
         <button className="primario" disabled={enviando}>
-          {enviando ? 'Salvando…' : 'Salvar nova senha'}
+          {enviando ? 'Salvando...' : 'Salvar nova senha'}
         </button>
       </form>
     </section>

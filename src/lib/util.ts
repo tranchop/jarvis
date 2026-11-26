@@ -7,9 +7,47 @@ export function hojeISO(): string {
 }
 
 export function formatarData(iso: string | null): string {
-  if (!iso) return '—'
+  if (!iso) return 'Sem data'
   const [a, m, d] = iso.slice(0, 10).split('-')
   return `${d}/${m}/${a}`
+}
+
+const DIA_MS = 86_400_000
+function diasAte(iso: string): number {
+  const [a, m, d] = iso.slice(0, 10).split('-').map(Number)
+  const [ha, hm, hd] = hojeISO().split('-').map(Number)
+  return Math.round((Date.UTC(a, m - 1, d) - Date.UTC(ha, hm - 1, hd)) / DIA_MS)
+}
+
+// "Hoje", "Amanhã", "Ontem", "sex., 28 nov." (ano só se for outro)
+export function dataRelativa(iso: string | null, vazio = 'Sem prazo'): string {
+  if (!iso) return vazio
+  const n = diasAte(iso)
+  if (n === 0) return 'Hoje'
+  if (n === 1) return 'Amanhã'
+  if (n === -1) return 'Ontem'
+  const [a, m, d] = iso.slice(0, 10).split('-').map(Number)
+  const dt = new Date(a, m - 1, d)
+  const mesmoAno = a === new Date().getFullYear()
+  const txt = dt.toLocaleDateString('pt-BR', {
+    weekday: Math.abs(n) <= 6 ? 'short' : undefined,
+    day: 'numeric',
+    month: 'short',
+    year: mesmoAno ? undefined : 'numeric',
+  })
+  return txt.charAt(0).toUpperCase() + txt.slice(1)
+}
+
+// "atualizado hoje", "atualizado ontem", "atualizado em 20/11"
+export function atualizadoEm(iso: string): string {
+  const r = dataRelativa(iso)
+  if (r === 'Hoje' || r === 'Ontem') return `atualizado ${r.toLowerCase()}`
+  const [a, m, d] = iso.slice(0, 10).split('-')
+  return `atualizado em ${d}/${m}${Number(a) === new Date().getFullYear() ? '' : `/${a}`}`
+}
+
+export function estaAtrasada(iso: string | null): boolean {
+  return Boolean(iso) && diasAte(iso!) < 0
 }
 
 export function somarData(iso: string, r: 'diaria' | 'semanal' | 'mensal'): string {

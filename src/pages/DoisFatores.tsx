@@ -63,7 +63,7 @@ export default function DoisFatores() {
     <main className="tela-auth">
       <form className="cartao auth" onSubmit={confirmar}>
         <h1>Verificação em 2 etapas</h1>
-        {estado.tipo === 'carregando' && !erro && <p className="sutil">Carregando…</p>}
+        {estado.tipo === 'carregando' && !erro && <p className="sutil">Preparando…</p>}
         {estado.tipo === 'cadastrar' && (
           <>
             <p>
@@ -93,11 +93,11 @@ export default function DoisFatores() {
             />
           </label>
         )}
-        {erro && <p className="erro">{erro}</p>}
+        {erro && <p className="erro" role="alert">{erro}</p>}
         <button className="primario" disabled={enviando || estado.tipo === 'carregando'}>
           {enviando ? 'Verificando…' : 'Confirmar'}
         </button>
-        <button type="button" className="link" onClick={() => void sair()}>
+        <button type="button" className="texto-btn" onClick={() => void sair()}>
           Sair
         </button>
       </form>

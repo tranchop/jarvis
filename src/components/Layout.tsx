@@ -1,13 +1,30 @@
+import {
+  BookOpenTextIcon,
+  CheckSquareIcon,
+  FlaskIcon,
+  HouseIcon,
+  SignOutIcon,
+  SquaresFourIcon,
+  UserCircleIcon,
+  type Icon,
+} from '@phosphor-icons/react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 
-const NAV = [
-  { to: '/', rotulo: 'Início', icone: '◎', fim: true },
-  { to: '/mestrado', rotulo: 'Painel', icone: '▦', fim: true },
-  { to: '/mestrado/experimentos', rotulo: 'Experimentos', icone: '⚗' },
-  { to: '/mestrado/protocolos', rotulo: 'Protocolos', icone: '☰' },
-  { to: '/mestrado/tarefas', rotulo: 'Tarefas', icone: '✓' },
+interface ItemNav {
+  to: string
+  rotulo: string
+  icone: Icon
+  fim?: boolean
+}
+
+const MESTRADO: ItemNav[] = [
+  { to: '/mestrado', rotulo: 'Painel', icone: SquaresFourIcon, fim: true },
+  { to: '/mestrado/experimentos', rotulo: 'Experimentos', icone: FlaskIcon },
+  { to: '/mestrado/protocolos', rotulo: 'Protocolos', icone: BookOpenTextIcon },
+  { to: '/mestrado/tarefas', rotulo: 'Tarefas', icone: CheckSquareIcon },
 ]
+const INICIO: ItemNav = { to: '/', rotulo: 'Início', icone: HouseIcon, fim: true }
 
 export default function Layout() {
   const { sair, session } = useAuth()
@@ -15,44 +32,54 @@ export default function Layout() {
     <div className="app">
       <aside className="lateral">
         <div className="marca">
-          <img src="/jarvis/icon.svg" alt="" width={32} height={32} />
+          <img src="/jarvis/icon.svg" alt="" width={30} height={30} />
           <span>Jarvis</span>
         </div>
-        <nav>
+        <nav aria-label="Principal">
+          <ItemLateral item={INICIO} />
           <p className="grupo">Mestrado</p>
-          {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.fim} className="item-nav">
-              <span aria-hidden>{n.icone}</span> {n.rotulo}
-            </NavLink>
+          {MESTRADO.map((n) => (
+            <ItemLateral key={n.to} item={n} />
           ))}
           <p className="grupo">Em breve</p>
-          <span className="item-nav inativo">Alunos de inglês</span>
-          <span className="item-nav inativo">Escotismo</span>
-          <span className="item-nav inativo">Pessoal</span>
+          <p className="em-breve">Alunos de inglês, Escotismo e Pessoal</p>
         </nav>
         <div className="rodape-lateral">
-          <span className="sutil pequeno">{session?.user.email}</span>
-          <NavLink to="/conta" className="link pequeno">
-            Conta e senha
-          </NavLink>
-          <button className="link" onClick={() => void sair()}>
-            Sair
+          <span className="email">{session?.user.email}</span>
+          <ItemLateral item={{ to: '/conta', rotulo: 'Conta e senha', icone: UserCircleIcon }} />
+          <button className="item-nav sair-btn" onClick={() => void sair()}>
+            <SignOutIcon size={20} /> Sair
           </button>
         </div>
       </aside>
       <main className="conteudo">
         <Outlet />
       </main>
-      <nav className="barra-inferior">
-        {NAV.map((n) => (
+      <nav className="barra-inferior" aria-label="Principal">
+        {[INICIO, ...MESTRADO].map((n) => (
           <NavLink key={n.to} to={n.to} end={n.fim} className="item-inferior">
-            <span aria-hidden className="icone">
-              {n.icone}
-            </span>
-            <span>{n.rotulo}</span>
+            {({ isActive }) => (
+              <>
+                <n.icone size={24} weight={isActive ? 'fill' : 'regular'} />
+                <span>{n.rotulo}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
     </div>
+  )
+}
+
+function ItemLateral({ item }: { item: ItemNav }) {
+  return (
+    <NavLink to={item.to} end={item.fim} className="item-nav">
+      {({ isActive }) => (
+        <>
+          <item.icone size={20} weight={isActive ? 'fill' : 'regular'} />
+          {item.rotulo}
+        </>
+      )}
+    </NavLink>
   )
 }

@@ -1,4 +1,5 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { AvisosProvider } from './components/Avisos'
 import Layout from './components/Layout'
 import { AuthProvider, useAuth } from './lib/auth'
 import { configurado } from './lib/supabase'
@@ -15,7 +16,12 @@ import Tarefas from './pages/mestrado/Tarefas'
 
 function Portao() {
   const { nivel } = useAuth()
-  if (nivel === 'carregando') return <main className="tela-auth sutil">Carregando…</main>
+  if (nivel === 'carregando')
+    return (
+      <main className="tela-auth" aria-busy="true">
+        <img src="/jarvis/icon.svg" alt="Jarvis" width={48} height={48} />
+      </main>
+    )
   if (nivel === 'deslogado') return <Login />
   if (nivel === 'precisa_2fa') return <DoisFatores />
   return (
@@ -49,7 +55,9 @@ export default function App() {
     )
   return (
     <AuthProvider>
-      <Portao />
+      <AvisosProvider>
+        <Portao />
+      </AvisosProvider>
     </AuthProvider>
   )
 }
