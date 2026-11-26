@@ -114,3 +114,50 @@ export function ok<T>(r: { data: T; error: { message: string } | null }): T {
   if (r.error) throw r.error
   return r.data
 }
+
+const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+export const moeda = (v: number) => BRL.format(v)
+
+// Aceita "25", "25,5", "1.234,56" e "1234.56"
+export function lerValor(txt: string): number | null {
+  let t = txt.trim().replace(/[R$\s]/g, '')
+  if (!t) return null
+  if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.')
+  const n = Number(t)
+  return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null
+}
+
+export function mesISO(d = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+export function intervaloMes(mes: string): { inicio: string; fim: string } {
+  const [a, m] = mes.split('-').map(Number)
+  const ultimo = new Date(a, m, 0).getDate()
+  return { inicio: `${mes}-01`, fim: `${mes}-${String(ultimo).padStart(2, '0')}` }
+}
+
+export function somarMes(mes: string, n: number): string {
+  const [a, m] = mes.split('-').map(Number)
+  return mesISO(new Date(a, m - 1 + n, 1))
+}
+
+export function nomeMes(mes: string): string {
+  const [a, m] = mes.split('-').map(Number)
+  const t = new Date(a, m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  return t.charAt(0).toUpperCase() + t.slice(1)
+}
+
+// Segunda-feira da semana de uma data (ISO)
+export function inicioSemana(iso = hojeISO()): string {
+  const [a, m, d] = iso.split('-').map(Number)
+  const dt = new Date(Date.UTC(a, m - 1, d))
+  const dia = (dt.getUTCDay() + 6) % 7
+  dt.setUTCDate(dt.getUTCDate() - dia)
+  return dt.toISOString().slice(0, 10)
+}
+
+export function horaAgora(): string {
+  const d = new Date()
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}

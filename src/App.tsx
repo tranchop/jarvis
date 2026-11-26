@@ -13,6 +13,11 @@ import Painel from './pages/mestrado/Painel'
 import ProtocoloDetalhe from './pages/mestrado/ProtocoloDetalhe'
 import Protocolos from './pages/mestrado/Protocolos'
 import Tarefas from './pages/mestrado/Tarefas'
+import Casa from './pages/pessoal/Casa'
+import Financas from './pages/pessoal/Financas'
+import Resumo from './pages/pessoal/Resumo'
+import Saude from './pages/pessoal/Saude'
+import Treinos from './pages/pessoal/Treinos'
 
 function Portao() {
   const { nivel } = useAuth()
@@ -35,6 +40,11 @@ function Portao() {
           <Route path="mestrado/protocolos" element={<Protocolos />} />
           <Route path="mestrado/protocolos/:id" element={<ProtocoloDetalhe />} />
           <Route path="mestrado/tarefas" element={<Tarefas />} />
+          <Route path="pessoal" element={<Resumo />} />
+          <Route path="pessoal/financas" element={<Financas />} />
+          <Route path="pessoal/saude" element={<Saude />} />
+          <Route path="pessoal/treinos" element={<Treinos />} />
+          <Route path="pessoal/casa" element={<Casa />} />
           <Route path="conta" element={<Conta />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

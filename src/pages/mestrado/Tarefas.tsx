@@ -17,7 +17,28 @@ function proximaSegunda(): string {
   return iso
 }
 
+interface Props {
+  area: 'mestrado' | 'casa'
+  titulo: string
+  subtitulo: string
+  categorias: string[]
+  vazio: string
+  repeticaoPadrao?: '' | Recorrencia
+}
+
 export default function Tarefas() {
+  return (
+    <ListaTarefas
+      area="mestrado"
+      titulo="Tarefas"
+      subtitulo="Mestrado"
+      categorias={CATEGORIAS_TAREFA}
+      vazio="Nada pendente. Escreva acima a próxima leitura, trecho da dissertação ou reunião com a orientadora."
+    />
+  )
+}
+
+export function ListaTarefas({ area, titulo: tituloPagina, subtitulo, categorias, vazio, repeticaoPadrao = '' }: Props) {
   const avisar = useAvisos()
   const [verFeitas, setVerFeitas] = useState(false)
   const { dados, erro, setDados, recarregar } = useCarregar(
@@ -26,20 +47,20 @@ export default function Tarefas() {
         await supabase
           .from('tarefas')
           .select('*')
-          .eq('area', 'mestrado')
+          .eq('area', area)
           .eq('arquivado', false)
           .eq('status', verFeitas ? 'feita' : 'pendente')
           .order(verFeitas ? 'concluida_em' : 'prazo', { ascending: !verFeitas, nullsFirst: false })
           .limit(verFeitas ? 50 : 500),
       ) as Tarefa[],
-    [verFeitas],
+    [verFeitas, area],
   )
   const [titulo, setTitulo] = useState('')
   const [prazo, setPrazo] = useState('')
   const [opcoes, setOpcoes] = useState(false)
   const [categoria, setCategoria] = useState('')
   const [prioridade, setPrioridade] = useState<1 | 2 | 3>(2)
-  const [recorrencia, setRecorrencia] = useState<'' | Recorrencia>('')
+  const [recorrencia, setRecorrencia] = useState<'' | Recorrencia>(repeticaoPadrao)
 
   const hoje = hojeISO()
   const amanha = somarData(hoje, 'diaria')
@@ -73,7 +94,7 @@ export default function Tarefas() {
           .from('tarefas')
           .insert({
             titulo: titulo.trim(),
-            area: 'mestrado',
+            area,
             prazo: prazo || null,
             categoria: vazioParaNull(categoria),
             prioridade,
@@ -85,7 +106,7 @@ export default function Tarefas() {
       if (!verFeitas) setDados([...(dados ?? []), t].sort((a, b) => (a.prazo ?? '9999').localeCompare(b.prazo ?? '9999')))
       setTitulo('')
       setPrazo('')
-      setRecorrencia('')
+      setRecorrencia(repeticaoPadrao)
       setPrioridade(2)
       avisar('Tarefa adicionada')
     } catch (err) {
@@ -136,8 +157,8 @@ export default function Tarefas() {
     <section>
       <header className="cabecalho">
         <div className="titulos">
-          <h1>Tarefas</h1>
-          <p className="sutil pequeno">Mestrado</p>
+          <h1>{tituloPagina}</h1>
+          <p className="sutil pequeno">{subtitulo}</p>
         </div>
         <div className="segmentos" role="group" aria-label="Mostrar">
           <button aria-pressed={!verFeitas} onClick={() => setVerFeitas(false)}>
@@ -177,7 +198,7 @@ export default function Tarefas() {
                     Categoria
                     <select value={categoria} onChange={(e) => setCategoria(e.target.value)}>
                       <option value="">Nenhuma</option>
-                      {CATEGORIAS_TAREFA.map((c) => (
+                      {categorias.map((c) => (
                         <option key={c}>{c}</option>
                       ))}
                     </select>
@@ -215,7 +236,7 @@ export default function Tarefas() {
           <Vazio>
             {verFeitas
               ? 'Nenhuma tarefa concluída ainda.'
-              : 'Nada pendente. Escreva acima a próxima leitura, trecho da dissertação ou reunião com a orientadora.'}
+              : vazio}
           </Vazio>
         </div>
       )}

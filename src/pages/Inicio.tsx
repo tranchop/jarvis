@@ -5,7 +5,7 @@ const AREAS: { nome: string; desc: string; to?: string; icone: Icon }[] = [
   { nome: 'Mestrado', desc: 'Experimentos, protocolos e tarefas', to: '/mestrado', icone: FlaskIcon },
   { nome: 'Alunos de inglês', desc: 'Aulas, horários e pagamentos', icone: StudentIcon },
   { nome: 'Escotismo', desc: 'Progressão dos jovens', icone: TentIcon },
-  { nome: 'Pessoal', desc: 'Finanças, saúde e casa', icone: BriefcaseIcon },
+  { nome: 'Pessoal', desc: 'Finanças, saúde, treinos e casa', to: '/pessoal', icone: BriefcaseIcon },
 ]
 
 export default function Inicio() {

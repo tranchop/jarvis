@@ -73,3 +73,60 @@ export interface Tarefa {
 
 export const MODELOS_CELULARES = ['SH-SY5Y', 'U87-MG', 'Cocultura SH-SY5Y + U87-MG', 'Esferoide 3D', 'MDA-MB-231', 'MCF10A']
 export const CATEGORIAS_TAREFA = ['Leitura', 'Escrita', 'Reunião', 'Bancada', 'Disciplina', 'Burocracia', 'Outro']
+
+// ---------------- Pessoal ----------------
+export interface Lancamento {
+  id: string
+  tipo: 'entrada' | 'saida'
+  valor: number
+  categoria: string
+  data: string
+  descricao: string | null
+  arquivado: boolean
+}
+
+export const CATEGORIAS_SAIDA = ['Alimentação', 'Transporte', 'Contas fixas', 'Lazer', 'Estudo', 'Saúde', 'Casa', 'Outros']
+export const CATEGORIAS_ENTRADA = ['Aulas de inglês', 'Bolsa', 'Outros']
+
+export interface Consulta {
+  id: string
+  tipo: 'consulta' | 'exame'
+  especialidade: string
+  data_hora: string
+  local: string | null
+  retorno: string | null
+  status: 'agendada' | 'realizada' | 'cancelada'
+  observacoes: string | null
+  arquivado: boolean
+}
+
+export interface Remedio {
+  id: string
+  nome: string
+  dose: string | null
+  horarios: string[]
+  inicio: string
+  fim: string | null
+  observacoes: string | null
+  arquivado: boolean
+}
+
+export interface Tomada {
+  id: string
+  remedio_id: string
+  data: string
+  horario: string
+  tomado_em: string
+}
+
+export interface Treino {
+  id: string
+  data: string
+  tipo: string
+  duracao_min: number | null
+  observacao: string | null
+  arquivado: boolean
+}
+
+export const TIPOS_TREINO = ['Musculação', 'Corrida', 'Caminhada', 'Bike', 'Natação', 'Funcional']
+export const CATEGORIAS_CASA = ['Limpeza', 'Roupa', 'Cozinha', 'Compras', 'Contas', 'Manutenção']

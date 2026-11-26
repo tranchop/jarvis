@@ -6,7 +6,8 @@ App pessoal (PWA) de **Pedro**, único usuário. Pedro não programa: explique e
 - React 19 + Vite + TypeScript, `HashRouter`, PWA via `vite-plugin-pwa`.
 - Supabase (Postgres + Auth com TOTP obrigatório). Projeto: `jarvis` (sa-east-1).
 - GitHub Pages em `https://tranchop.github.io/jarvis/` (deploy pelo workflow `deploy.yml`).
-- Interface: tema escuro; barra lateral no PC, barra inferior no celular (≤ 860 px).
+- Interface: tema escuro; barra lateral no PC, barra inferior no celular (≤ 860 px) com as seções da área atual.
+- Sistema visual em `src/styles.css` (tokens OKLCH, raios 10/14/999, camadas z 10-40); ícones Phosphor; avisos com Desfazer (`useAvisos`) em vez de confirm().
 
 ## Regras de segurança (não negociáveis)
 - Toda tabela nova: `enable` + `force row level security`, `revoke all ... from anon, public`, políticas com `(select private.is_owner())`, gatilhos `touch_` e `hist_`. Veja `supabase/migrations/0002_mestrado.sql`.
@@ -22,7 +23,8 @@ App pessoal (PWA) de **Pedro**, único usuário. Pedro não programa: explique e
 - [ ] Migração do Notion (protocolos e fichamentos) para o app.
 - [ ] Escotismo — jovens, catálogo de progressão, conquistas, exportação em planilha.
 - [ ] Alunos de inglês — horários, aulas futuras automáticas, pagamentos e bloqueio de aula.
-- [ ] Pessoal — finanças, saúde, casa.
+- [x] Pessoal — finanças (lançamentos, resumo do mês, gastos por categoria), saúde (doses do dia, consultas e exames, remédios), treinos (semana e histórico), casa (tarefas recorrentes, `tarefas.area = 'casa'`).
+- [ ] Pessoal: repasses dos alunos entram nas finanças automaticamente (depende da área Alunos).
 - [ ] Integrações — Google Calendar, notificações, backup semanal para o Drive.
 - [ ] Claude no app (Edge Function) e entrada por voz (Atalho do iOS).
 
