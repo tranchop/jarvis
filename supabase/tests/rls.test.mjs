@@ -15,10 +15,18 @@ await db.exec(`
     select nullif(auth.jwt()->>'sub','')::uuid $$;
   grant usage on schema auth to anon, authenticated;
   grant usage on schema public to anon, authenticated;
+  create role service_role nologin;
+  -- simulação mínima do Supabase Vault
+  create schema vault;
+  create table vault.secrets (id uuid primary key default gen_random_uuid(), name text, description text, secret text);
+  create function vault.create_secret(s text, n text, d text) returns uuid language sql as $$ insert into vault.secrets (secret, name, description) values (s, n, d) returning id $$;
+  create function vault.update_secret(i uuid, s text) returns void language sql as $$ update vault.secrets set secret = s where id = i $$;
+  create view vault.decrypted_secrets as select id, name, secret as decrypted_secret from vault.secrets;
 `)
 await db.exec(mig('0001_base_seguranca.sql'))
 await db.exec(mig('0002_mestrado.sql'))
 await db.exec(mig('0003_pessoal.sql'))
+await db.exec(mig('0004_google_agenda.sql'))
 
 const DONO = '11111111-1111-1111-1111-111111111111'
 const INTRUSO = '22222222-2222-2222-2222-222222222222'
@@ -126,6 +134,36 @@ r = await como('authenticated', aal2, `delete from public.saude_remedios where i
 check('remédio não é apagado (só arquivado)', Boolean(r.e))
 r = await como('authenticated', aal2, `insert into public.tarefas (titulo, area, recorrencia) values ('Lavar roupa', 'casa', 'semanal')`)
 check('tarefa de casa aceita', !r.e)
+
+// 9. Google Agenda: token só acessível pelo servidor
+for (const f of ["google_ler_token()", "google_remover()", "google_salvar_token('x','y')", "google_salvar_estado('${'a'.repeat(40)}')", "jarvis_eh_dono('${DONO}')"]) {
+  r = await como('authenticated', aal2, `select public.${f}`)
+  check(`site não executa ${f.split('(')[0]}`, Boolean(r.e))
+  r = await como('anon', {}, `select public.${f}`)
+  check(`anônimo não executa ${f.split('(')[0]}`, Boolean(r.e))
+}
+r = await como('anon', {}, `select public.google_status()`)
+check('anônimo não vê status do Google', Boolean(r.e))
+r = await como('authenticated', aal1, `select public.google_status()`)
+check('sem 2FA não vê status do Google', Boolean(r.e))
+r = await como('authenticated', aal2, `select public.google_status() s`)
+check('dono vê status (desconectado)', !r.e && r.r.rows[0].s.conectado === false)
+const est = 'e'.repeat(48)
+r = await como('service_role', {}, `select public.google_salvar_estado('${est}')`)
+check('servidor salva estado OAuth', !r.e)
+r = await como('service_role', {}, `select public.google_consumir_estado('${est}') ok`)
+check('estado OAuth válido uma vez', !r.e && r.r.rows[0].ok === true)
+r = await como('service_role', {}, `select public.google_consumir_estado('${est}') ok`)
+check('estado OAuth não pode ser reutilizado', !r.e && r.r.rows[0].ok === false)
+r = await como('service_role', {}, `select public.google_salvar_token('refresh-secreto', 'pedro@x.com')`)
+check('servidor guarda token no cofre', !r.e)
+r = await como('service_role', {}, `select public.google_ler_token() t`)
+check('servidor lê token do cofre', !r.e && r.r.rows[0].t === 'refresh-secreto')
+r = await como('authenticated', aal2, `select public.google_status() s`)
+check('status conectado sem expor token', !r.e && r.r.rows[0].s.conectado === true && !JSON.stringify(r.r.rows[0].s).includes('refresh-secreto'))
+r = await como('service_role', {}, `select public.google_remover()`)
+r = await db.query(`select count(*)::int n from vault.secrets`)
+check('desconectar apaga o token do cofre', r.rows[0].n === 0)
 
 console.log(falhas ? `\n${falhas} FALHA(S)` : '\nTodos os testes passaram')
 process.exit(falhas ? 1 : 0)
